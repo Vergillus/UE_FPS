@@ -119,6 +119,7 @@ void AMyFPSCharacter::BeginPlay()
 	}
 
 	MovementComp = AMyFPSCharacter::GetCharacterMovement();
+	HUD = Cast<AMyFPSHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 
 }
 
@@ -126,7 +127,7 @@ void AMyFPSCharacter::Tick(float DeltaSeconds)
 {		
 	Super::Tick(DeltaSeconds);
 
-	if (IsFiring && !bCanZoom)
+	if (IsFiring)
 	{
 		//TO DO : Implement Timer in here
 		FireCooldown -= 0.8f;
@@ -154,10 +155,10 @@ void AMyFPSCharacter::Tick(float DeltaSeconds)
 		
 	}
 	//UE_LOG(LogTemp, Warning, TEXT("Radius: %f"), SpreadRadius);
-	AMyFPSHUD* HUD = Cast<AMyFPSHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+	
 	if (HUD != nullptr)
 	{
-		HUD->den = SpreadRadius;
+		HUD->ScaleMultiplayer = SpreadRadius;
 		//UE_LOG(LogTemp, Warning, TEXT("%f"), HUD->den);
 	}
 
@@ -169,9 +170,7 @@ void AMyFPSCharacter::Tick(float DeltaSeconds)
 	else
 	{
 		ZoomOut();
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Fire?: %s"), (IsFiring ? TEXT("true") : TEXT("false")));
+	}	
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -217,7 +216,11 @@ void AMyFPSCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 
 void AMyFPSCharacter::OnFire()
 {
-	IsFiring = true;
+	if (!bCanZoom)
+	{
+		IsFiring = true;
+	}
+	
 }
 
 void AMyFPSCharacter::StopFire()
@@ -281,18 +284,18 @@ void AMyFPSCharacter::SpreadRayCast()
 	if (World)
 	{
 		
-		FVector ConeLOL;
+		FVector RndPointInCone;
 		if (IsFiring)
 		{
-			 ConeLOL = FMath::VRandCone(FirstPersonCameraComponent->GetForwardVector(), SpreadRadius);
+			 RndPointInCone = FMath::VRandCone(FirstPersonCameraComponent->GetForwardVector(), SpreadRadius);
 		}
 		else
 		{
-			ConeLOL.ZeroVector;
+			RndPointInCone.ZeroVector;
 		}
 		//UE_LOG(LogTemp, Warning, TEXT("COne! : %s"), *ConeLOL.ToString());
 		FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
-		FVector TraceEnd = (TraceStart + ConeLOL * 100.0f) + (FirstPersonCameraComponent->GetForwardVector() * 5000.f);
+		FVector TraceEnd = (TraceStart + RndPointInCone * 100.0f) + (FirstPersonCameraComponent->GetForwardVector() * 5000.f);
 		
 		FCollisionQueryParams* QueryParams = new FCollisionQueryParams();
 		QueryParams->AddIgnoredActor(this);
@@ -300,7 +303,7 @@ void AMyFPSCharacter::SpreadRayCast()
 
 		if (World->LineTraceSingleByChannel(HitRes, TraceStart, TraceEnd, ECC_Visibility, *QueryParams))
 		{			
-			if (!IsFiring)
+			if (!IsFiring && !bCanZoom)
 			{
 				bCanHook = true;				
 			}
@@ -342,7 +345,7 @@ void AMyFPSCharacter::CalculateHook(FHitResult Hit)
 		ForceVector.Z = 10000.f;		
 	}	
 
-	UE_LOG(LogTemp, Warning, TEXT("Force Vector: %s"), *ForceVector.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("Force Vector: %s"), *ForceVector.ToString());
 
 	//UCharacterMovementComponent* MoveComp = AMyFPSCharacter::GetCharacterMovement();	
 	if (MovementComp)

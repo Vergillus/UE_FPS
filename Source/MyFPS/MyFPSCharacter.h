@@ -50,6 +50,9 @@ class AMyFPSCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCharacterMovementComponent* MovementComp;
 
+	UPROPERTY()
+	class AMyFPSHUD* HUD;
+
 public:
 	AMyFPSCharacter();
 

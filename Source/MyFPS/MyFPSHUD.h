@@ -21,11 +21,15 @@ public:
 	virtual void BeginPlay();
 
 	UPROPERTY()
-	float den;	
+	float ScaleMultiplayer;	
 
 private:
 	/** Crosshair asset pointer */
 	class UTexture2D* CrosshairTex;
+
+	class UTexture2D* ZoomCrosshairTex;
+
+	bool bIsZooming;	
 
 	UPROPERTY()
 	int Size;

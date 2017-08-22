@@ -13,5 +13,5 @@ AMyFPSGameMode::AMyFPSGameMode()
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
 
 	// use our custom HUD class
-	HUDClass = AMyFPSHUD::StaticClass();
+	HUDClass = AMyFPSHUD::StaticClass();	
 }

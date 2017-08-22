@@ -14,14 +14,19 @@ AMyFPSHUD::AMyFPSHUD()
 	static ConstructorHelpers::FObjectFinder<UTexture2D> CrosshairTexObj(TEXT("/Game/FirstPerson/Textures/FirstPersonCrosshair"));
 	CrosshairTex = CrosshairTexObj.Object;	
 
-	den = 1.0f;
+	static ConstructorHelpers::FObjectFinder<UTexture2D> ZoomCrosshairTexObj(TEXT("Texture2D'/Game/StarterContent/Textures/T_Tech_Dot_M.T_Tech_Dot_M'"));
+	ZoomCrosshairTex = ZoomCrosshairTexObj.Object;
+
+	ScaleMultiplayer = 1.0f;
+	bIsZooming = true;
+
 }
 
 
 void AMyFPSHUD::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("HUD Begin Play!!!!!"));	
+	//UE_LOG(LogTemp, Warning, TEXT("HUD Begin Play!!!!!"));	
 
 	
 	/*Size = 12;
@@ -59,11 +64,27 @@ void AMyFPSHUD::DrawHUD()
 	//const AMyFPSCharacter* CharRef = NewObject<AMyFPSCharacter>();
 	
 	//den = CharRef->SpreadRadius;
-	const FVector2D CrosshairDrawPosition((Center.X - (CrosshairTex->GetSizeX() / 2)*den), (Center.Y - (CrosshairTex->GetSizeY() / 2)*den));
-	// draw the crosshair
-	FCanvasTileItem TileItem(CrosshairDrawPosition, CrosshairTex->Resource, FVector2D(CrosshairTex->GetSizeX() * den, CrosshairTex->GetSizeY() * den), FLinearColor::White);
-	TileItem.BlendMode = SE_BLEND_Translucent;
-	Canvas->DrawItem(TileItem);
+
+	if (bIsZooming)
+	{
+		const FVector2D CrosshairDrawPosition((Center.X - (CrosshairTex->GetSizeX() / 2)*ScaleMultiplayer), (Center.Y - (CrosshairTex->GetSizeY() / 2)*ScaleMultiplayer));
+		// draw the crosshair
+		FCanvasTileItem TileItem(CrosshairDrawPosition, CrosshairTex->Resource, FVector2D(CrosshairTex->GetSizeX() * ScaleMultiplayer, CrosshairTex->GetSizeY() * ScaleMultiplayer), FLinearColor::White);
+		TileItem.BlendMode = SE_BLEND_Translucent;		
+		Canvas->DrawItem(TileItem);
+
+		DrawRect(FColor::Red, 0, 0, (Canvas->ClipX/2) / ScaleMultiplayer,10 );
+	}
+	else
+	{
+		const FVector2D CrosshairDrawPosition((Center.X - (ZoomCrosshairTex->GetSizeX() / 2)*ScaleMultiplayer), (Center.Y - (ZoomCrosshairTex->GetSizeY() / 2)*ScaleMultiplayer));
+		// draw the crosshair
+		FCanvasTileItem TileItem(CrosshairDrawPosition, ZoomCrosshairTex->Resource, FVector2D(ZoomCrosshairTex->GetSizeX() * ScaleMultiplayer, ZoomCrosshairTex->GetSizeY() * ScaleMultiplayer), FLinearColor::White);
+		TileItem.BlendMode = SE_BLEND_Translucent;
+		Canvas->DrawItem(TileItem);		
+	}
+	
+	
 	//UE_LOG(LogTemp, Warning, TEXT("DEN: %f"), CharRef->SpreadRadius);	
 
 	//for (int i = 0; i < Size; i++)
