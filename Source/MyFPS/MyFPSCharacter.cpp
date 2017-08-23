@@ -95,6 +95,7 @@ AMyFPSCharacter::AMyFPSCharacter()
 	HookCooldown = 0.0f;
 	SpreadRadius = 1.0f;
 	ForceMulti = 10000.0f;	
+	BulletCount = MaximumBulletCount = 30;
 
 }
 
@@ -119,7 +120,7 @@ void AMyFPSCharacter::BeginPlay()
 	}
 
 	MovementComp = AMyFPSCharacter::GetCharacterMovement();
-	HUD = Cast<AMyFPSHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+	HUD = Cast<AMyFPSHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());	
 
 }
 
@@ -127,50 +128,57 @@ void AMyFPSCharacter::Tick(float DeltaSeconds)
 {		
 	Super::Tick(DeltaSeconds);
 
-	if (IsFiring)
-	{
-		//TO DO : Implement Timer in here
-		FireCooldown -= 0.8f;
+	if (IsFiring && BulletCount > 0)
+	{			
 		if (FireCooldown <= 0.0f) 
-		{
+		{	
+			UE_LOG(LogTemp, Warning, TEXT("FIRE!!!! IFFFF"));
 			SerialFire();
-			SpreadRadius += 25.f * DeltaSeconds;			
-			FireCooldown = 5.0f;
-		}		
+			BulletCount--;
+			SpreadRadius += 25.f * DeltaSeconds;
+			FireCooldown = 1.0f;
+		}				
+
+		//TO DO : Implement Timer in here
+		FireCooldown -= 0.1f;		
 	}
 	else{SpreadRadius -= 10.f * DeltaSeconds;}
-	//UE_LOG(LogTemp, Warning, TEXT("Spread Radius: %f"), SpreadRadius);
-	SpreadRadius = FMath::Clamp(SpreadRadius, 1.f, 300.f);
 
-	if (bCanHook)
-	{
-		HookCooldown -= 0.5f;
-		if (HookCooldown <= 0.0f)
-		{			
-			CalculateHook(HitRes);
-			HookCooldown = 10.f;
-			bCanHook = false;
-						
-		}
-		
-	}
-	//UE_LOG(LogTemp, Warning, TEXT("Radius: %f"), SpreadRadius);
-	
+	//UE_LOG(LogTemp, Warning, TEXT("Cooldown: %f"), FireCooldown);
+	SpreadRadius = FMath::Clamp(SpreadRadius, 1.f, 300.f);
+	//FireCooldown = FMath::Clamp(FireCooldown, 0.0f, 1.0f);
+
 	if (HUD != nullptr)
 	{
 		HUD->ScaleMultiplayer = SpreadRadius;
-		//UE_LOG(LogTemp, Warning, TEXT("%f"), HUD->den);
-	}
+		HUD->SetBulletText(BulletCount,MaximumBulletCount);
+		HUD->SetCooldownText(HookCooldown);		
+	}	
+
+	//Revise hook mechanic
+	if (bCanHook)
+	{
+		CalculateHook(HitRes);
+		HookCooldown = 10.f;
+		bCanHook = false;
+	}	
+	HookCooldown -= 1.f * DeltaSeconds;
+	HookCooldown = FMath::Clamp(HookCooldown, 0.0f, 10.f);
+	//UE_LOG(LogTemp, Warning, TEXT("Radius: %f"), SpreadRadius);	
 
 	if (bCanZoom)
 	{
-		ZoomIn();
-		StopFire();
+		ZoomIn();		
 	}
 	else
 	{
 		ZoomOut();
-	}	
+	}
+
+	if (BulletCount <= 0)
+	{
+		Reload();
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -199,6 +207,7 @@ void AMyFPSCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 	}	
 
 	PlayerInputComponent->BindAction("ZoomFire", IE_Pressed, this, &AMyFPSCharacter::ZoomFire);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AMyFPSCharacter::Reload);
 
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AMyFPSCharacter::OnResetVR);
 
@@ -278,6 +287,11 @@ void AMyFPSCharacter::SerialFire()
 
 }
 
+void AMyFPSCharacter::Reload()
+{
+	BulletCount = MaximumBulletCount;
+}
+
 void AMyFPSCharacter::SpreadRayCast()
 {
 	UWorld* const World = GetWorld();
@@ -303,7 +317,7 @@ void AMyFPSCharacter::SpreadRayCast()
 
 		if (World->LineTraceSingleByChannel(HitRes, TraceStart, TraceEnd, ECC_Visibility, *QueryParams))
 		{			
-			if (!IsFiring && !bCanZoom)
+			if (!IsFiring && !bCanZoom && HookCooldown <= 0.0f)
 			{
 				bCanHook = true;				
 			}
@@ -380,6 +394,7 @@ void AMyFPSCharacter::ZoomOut()
 void AMyFPSCharacter::ZoomFire()
 {
 	SerialFire();
+	BulletCount -= 5;
 }
 
 void AMyFPSCharacter::OnResetVR()

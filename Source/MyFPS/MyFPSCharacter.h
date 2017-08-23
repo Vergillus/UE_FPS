@@ -53,6 +53,17 @@ class AMyFPSCharacter : public ACharacter
 	UPROPERTY()
 	class AMyFPSHUD* HUD;
 
+	UFUNCTION()
+	void Reload();
+	
+	UPROPERTY()
+	int32 BulletCount;
+
+	UPROPERTY()
+	int32 MaximumBulletCount;
+
+	
+
 public:
 	AMyFPSCharacter();
 

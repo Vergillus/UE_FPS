@@ -20,8 +20,12 @@ public:
 	virtual void DrawHUD() override;
 	virtual void BeginPlay();
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	float ScaleMultiplayer;	
+
+	void SetBulletText(const int BulletCount, const int MaxBullet);
+
+	void SetCooldownText(float val);
 
 private:
 	/** Crosshair asset pointer */
@@ -42,6 +46,14 @@ private:
 
 	UPROPERTY()
 	TArray<FVector2D> LOL;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	FString BulletText;
+
+	FString MaxBulletText;
+
+	UPROPERTY()
+	FString CooldownText;
 
 };
 

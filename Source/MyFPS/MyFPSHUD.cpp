@@ -47,6 +47,17 @@ void AMyFPSHUD::BeginPlay()
 	}*/
 }
 
+void AMyFPSHUD::SetBulletText(const int BulletCount, const int MaxBullet)
+{
+	BulletText = FString::FromInt(BulletCount);
+	MaxBulletText = FString("|").Append(FString::FromInt(MaxBullet));
+}
+
+void AMyFPSHUD::SetCooldownText(float val)
+{
+	CooldownText = FString::SanitizeFloat(FMath::CeilToFloat(val));
+}
+
 
 void AMyFPSHUD::DrawHUD()
 {
@@ -64,25 +75,20 @@ void AMyFPSHUD::DrawHUD()
 	//const AMyFPSCharacter* CharRef = NewObject<AMyFPSCharacter>();
 	
 	//den = CharRef->SpreadRadius;
+	
+	const FVector2D CrosshairDrawPosition((Center.X - (CrosshairTex->GetSizeX() / 2)*ScaleMultiplayer), (Center.Y - (CrosshairTex->GetSizeY() / 2)*ScaleMultiplayer));
+	// draw the crosshair
+	FCanvasTileItem TileItem(CrosshairDrawPosition, CrosshairTex->Resource, FVector2D(CrosshairTex->GetSizeX() * ScaleMultiplayer, CrosshairTex->GetSizeY() * ScaleMultiplayer), FLinearColor::White);
+	TileItem.BlendMode = SE_BLEND_Translucent;
+	Canvas->DrawItem(TileItem);
 
-	if (bIsZooming)
-	{
-		const FVector2D CrosshairDrawPosition((Center.X - (CrosshairTex->GetSizeX() / 2)*ScaleMultiplayer), (Center.Y - (CrosshairTex->GetSizeY() / 2)*ScaleMultiplayer));
-		// draw the crosshair
-		FCanvasTileItem TileItem(CrosshairDrawPosition, CrosshairTex->Resource, FVector2D(CrosshairTex->GetSizeX() * ScaleMultiplayer, CrosshairTex->GetSizeY() * ScaleMultiplayer), FLinearColor::White);
-		TileItem.BlendMode = SE_BLEND_Translucent;		
-		Canvas->DrawItem(TileItem);
+	DrawRect(FColor::Red, 0, 0, (Canvas->ClipX / 2) / ScaleMultiplayer, 10);	
+	DrawRect(FColor::Red, 1000.f, 500.f, 50.f, 50.f);
+	DrawText(CooldownText, FLinearColor::Green, 1000.f, 500.f, 0, 2);
 
-		DrawRect(FColor::Red, 0, 0, (Canvas->ClipX/2) / ScaleMultiplayer,10 );
-	}
-	else
-	{
-		const FVector2D CrosshairDrawPosition((Center.X - (ZoomCrosshairTex->GetSizeX() / 2)*ScaleMultiplayer), (Center.Y - (ZoomCrosshairTex->GetSizeY() / 2)*ScaleMultiplayer));
-		// draw the crosshair
-		FCanvasTileItem TileItem(CrosshairDrawPosition, ZoomCrosshairTex->Resource, FVector2D(ZoomCrosshairTex->GetSizeX() * ScaleMultiplayer, ZoomCrosshairTex->GetSizeY() * ScaleMultiplayer), FLinearColor::White);
-		TileItem.BlendMode = SE_BLEND_Translucent;
-		Canvas->DrawItem(TileItem);		
-	}
+	DrawText(BulletText, FLinearColor::Yellow, 1000.f, 600.f, 0, 2);
+	DrawText(MaxBulletText, FLinearColor::Yellow, 1025.f, 600.f, 0, 2);
+	
 	
 	
 	//UE_LOG(LogTemp, Warning, TEXT("DEN: %f"), CharRef->SpreadRadius);	
