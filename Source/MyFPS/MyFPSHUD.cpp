@@ -50,7 +50,7 @@ void AMyFPSHUD::BeginPlay()
 void AMyFPSHUD::SetBulletText(const int BulletCount, const int MaxBullet)
 {
 	BulletText = FString::FromInt(BulletCount);
-	MaxBulletText = FString("|").Append(FString::FromInt(MaxBullet));
+	MaxBulletText = FString(" | ").Append(FString::FromInt(MaxBullet));
 }
 
 void AMyFPSHUD::SetCooldownText(float val)

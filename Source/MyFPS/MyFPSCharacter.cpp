@@ -14,6 +14,7 @@
 #include "Engine/Canvas.h"
 #include "Runtime/Engine/Classes/GameFramework/CharacterMovementComponent.h"
 #include "MyFPSHUD.h"
+#include "MyFPSMine.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -96,6 +97,8 @@ AMyFPSCharacter::AMyFPSCharacter()
 	SpreadRadius = 1.0f;
 	ForceMulti = 10000.0f;	
 	BulletCount = MaximumBulletCount = 30;
+	
+	MineClass = AMyFPSMine::StaticClass();
 
 }
 
@@ -120,8 +123,8 @@ void AMyFPSCharacter::BeginPlay()
 	}
 
 	MovementComp = AMyFPSCharacter::GetCharacterMovement();
-	HUD = Cast<AMyFPSHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());	
-
+	HUD = Cast<AMyFPSHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+	
 }
 
 void AMyFPSCharacter::Tick(float DeltaSeconds)
@@ -209,6 +212,8 @@ void AMyFPSCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 	PlayerInputComponent->BindAction("ZoomFire", IE_Pressed, this, &AMyFPSCharacter::ZoomFire);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AMyFPSCharacter::Reload);
 
+	PlayerInputComponent->BindAction("DeployMine", IE_Pressed, this, &AMyFPSCharacter::SpawnMine);
+
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AMyFPSCharacter::OnResetVR);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMyFPSCharacter::MoveForward);
@@ -287,6 +292,27 @@ void AMyFPSCharacter::SerialFire()
 
 }
 
+void AMyFPSCharacter::SpawnMine()
+{
+	if (MineClass != NULL)
+	{
+		UWorld* const World = GetWorld();
+		if (World != NULL)
+		{
+			const FRotator SpawnRotation = GetControlRotation();
+			//Revise the spawn location later
+			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+
+			//Set Spawn Collision Handling Override
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+			//Spawn the mine at the muzzle location
+			World->SpawnActor<AMyFPSMine>(MineClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		}
+	}
+}
+
 void AMyFPSCharacter::Reload()
 {
 	BulletCount = MaximumBulletCount;
@@ -357,13 +383,12 @@ void AMyFPSCharacter::CalculateHook(FHitResult Hit)
 	if (HitPoint.Z < FirstPersonCameraComponent->GetComponentLocation().Z)
 	{
 		ForceVector.Z = 10000.f;		
-	}	
-
-	//UE_LOG(LogTemp, Warning, TEXT("Force Vector: %s"), *ForceVector.ToString());
+	}		
 
 	//UCharacterMovementComponent* MoveComp = AMyFPSCharacter::GetCharacterMovement();	
 	if (MovementComp)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Force Vector: %s"), *ForceVector.ToString());
 		MovementComp->AddImpulse(ForceVector);
 	}
 	

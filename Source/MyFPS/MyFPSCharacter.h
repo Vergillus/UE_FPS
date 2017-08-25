@@ -89,6 +89,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category=Projectile)
 	TSubclassOf<class AMyFPSProjectile> ProjectileClass;
 
+	/** Mine class to spawn*/
+	UPROPERTY(EditDefaultsOnly, Category = Projectile)
+	TSubclassOf<class AMyFPSMine> MineClass;
+
 	/** Sound to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
 	class USoundBase* FireSound;
@@ -109,6 +113,7 @@ public:
 	UPROPERTY()
 	bool bCanHook;
 
+	/**Bool flag for cheching whether we can zoom and change fire mode*/
 	UPROPERTY()
 	bool bCanZoom;	
 
@@ -185,6 +190,9 @@ protected:
 
 	UFUNCTION()
 	void ZoomFire();
+
+	UFUNCTION()
+	void SpawnMine();
 
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
